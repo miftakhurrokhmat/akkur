@@ -1,0 +1,80 @@
+Setup backend
+=============
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+
+Migration
+=========
+alembic upgrade head
+
+Seed data
+=========
+python seed_data.py    # Master kurikulum + users
+python seed_demo.py    # Data demo (opsional)
+
+Jalankan
+========
+uvicorn app.main:app --reload --port 8000
+
+Buka
+====
+Frontend: http://localhost:8000
+
+Docs: http://localhost:8000/docs
+
+
+
+Quick Start (Docker)
+====================
+docker compose up -d --build
+
+
+Migration & seed via Docker
+===========================
+docker compose exec app alembic upgrade head
+docker compose exec app python seed_data.py
+docker compose exec app python seed_demo.py
+
+Login Default
+=============
+Username	Password	Role
+admin		admin123	Admin Prodi
+dewi		dosen123	Dosen
+budi		mhs123		Mahasiswa
+
+
+Endpoint Utama
+==============
+GET 	/docs — Swagger UI
+POST 	/api/auth/login — Login
+GET 	/api/cpl — List CPL
+POST 	/api/krs — Buat KRS
+POST 	/api/nilai/input — Input nilai (auto-hitung)
+GET 	/api/laporan/rumusan-cpl/{mhs_id}?tahun_id= — Tabel 20
+
+
+Testing
+=======
+# Health check
+curl http://localhost:8000/api/health
+
+# Login
+curl -X POST http://localhost:8000/api/auth/login \
+  -d "username=admin&password=admin123"
+
+# List CPL
+curl http://localhost:8000/api/cpl
+
+
+Deployment VPS
+==============
+git clone <repo> simkur && cd simkur
+cp backend/.env.example backend/.env
+# edit .env, ganti SECRET_KEY
+docker compose up -d --build
+docker compose exec app alembic upgrade head
+docker compose exec app python seed_data.py
+

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>ERD — SIMKUR</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; line-height: 1.6; background: #fafafa; }
+  h1 { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }
+  h2 { color: #4338ca; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+  h3 { color: #6366f1; }
+  .entity { display: inline-block; background: white; border: 2px solid #4f46e5; border-radius: 8px; padding: 15px 20px; margin: 10px; vertical-align: top; min-width: 220px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+  .entity h4 { margin: 0 0 10px 0; color: #4f46e5; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+  .entity ul { margin: 0; padding-left: 18px; font-size: 13px; }
+  .entity li { margin: 3px 0; }
+  .pk { color: #dc2626; font-weight: bold; }
+  .fk { color: #f59e0b; font-weight: bold; }
+  .relation { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #4f46e5; margin: 10px 0; font-family: 'Consolas', monospace; }
+  .legend { background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; }
+  .legend span { margin-right: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 15px 0; background: white; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 14px; }
+  th { background: #4f46e5; color: white; }
+</style>
+</head>
+<body>
+
+<h1>🗄️ Entity Relationship Diagram (ERD)</h1>
+<h2 style="border:none;margin-top:0">SIMKUR — Sistem Informasi Manajemen Kurikulum</h2>
+
+<div class="legend">
+  <strong>Legend:</strong>
+  <span><span class="pk">PK</span> = Primary Key</span>
+  <span><span class="fk">FK</span> = Foreign Key</span>
+  <span>⊃ = 1-to-many</span>
+  <span>⋈ = many-to-many</span>
+</div>
+
+<h2>1. Master Kurikulum</h2>
+
+<div class="entity">
+  <h4>CPL</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK, serial)</li>
+    <li>kode (unique)</li>
+    <li>deskripsi (text)</li>
+    <li>aspek (varchar)</li>
+    <li>created_at</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>CPMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>kode (unique)</li>
+    <li>deskripsi</li>
+    <li><span class="fk">cpl_id</span> (FK → cpl)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>SubCPMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>kode</li>
+    <li>deskripsi</li>
+    <li><span class="fk">cpmk_id</span> (FK → cpmk)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>MK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>kode (unique)</li>
+    <li>nama</li>
+    <li>sks (int)</li>
+    <li>semester (int)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>cpmk_mk (junction)</h4>
+  <ul>
+    <li><span class="pk fk">cpmk_id</span> (FK → cpmk)</li>
+    <li><span class="pk fk">mk_id</span> (FK → mk)</li>
+  </ul>
+</div>
+
+<div class="relation">
+CPL (1) ⊃ CPMK (N)<br>
+CPMK (N) ⋈ MK (N) via cpmk_mk<br>
+CPMK (1) ⊃ SubCPMK (N)
+</div>
+
+<h2>2. Master Akademik</h2>
+
+<div class="entity">
+  <h4>Mahasiswa</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>nim (unique)</li>
+    <li>nama</li>
+    <li>angkatan (int)</li>
+    <li>prodi</li>
+    <li>status</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>Dosen</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>nidn (unique)</li>
+    <li>nama</li>
+    <li>email</li>
+    <li>jabatan</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>TahunAkademik</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>kode (unique)</li>
+    <li>tahun_mulai (int)</li>
+    <li>semester</li>
+    <li>aktif (bool)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>Kelas</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">mk_id</span> (FK → mk)</li>
+    <li><span class="fk">tahun_akademik_id</span> (FK)</li>
+    <li><span class="fk">dosen_id</span> (FK → dosen)</li>
+    <li>kode_kelas</li>
+    <li>kapasitas</li>
+    <li>jadwal, ruang</li>
+  </ul>
+</div>
+
+<div class="relation">
+Mahasiswa (1) ⊃ KRS (N)<br>
+Dosen (1) ⊃ Kelas (N)<br>
+TahunAkademik (1) ⊃ Kelas (N)<br>
+MK (1) ⊃ Kelas (N)
+</div>
+
+<h2>3. Transaksi KRS</h2>
+
+<div class="entity">
+  <h4>KRS</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">mahasiswa_id</span> (FK)</li>
+    <li><span class="fk">tahun_akademik_id</span> (FK)</li>
+    <li>status (draft/diajukan/disetujui/ditolak)</li>
+    <li>total_sks</li>
+    <li><span class="fk">approved_by</span> (FK → dosen)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>KRSDetail</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">krs_id</span> (FK → krs)</li>
+    <li><span class="fk">kelas_id</span> (FK → kelas)</li>
+    <li>status</li>
+  </ul>
+</div>
+
+<div class="relation">
+KRS (1) ⊃ KRSDetail (N)<br>
+Kelas (1) ⊃ KRSDetail (N)
+</div>
+
+<h2>4. Penilaian</h2>
+
+<div class="entity">
+  <h4>KomponenPenilaian</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>kode (unique)</li>
+    <li>nama</li>
+    <li>kategori</li>
+    <li>aktif</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>BobotKomponenMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">kelas_id</span> (FK)</li>
+    <li><span class="fk">komponen_id</span> (FK)</li>
+    <li>bobot (0-100)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>BobotCPMKMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">kelas_id</span> (FK)</li>
+    <li><span class="fk">cpmk_id</span> (FK)</li>
+    <li>bobot (0-100)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>KonfigurasiPenilaianCPMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">kelas_id</span>, <span class="fk">cpmk_id</span>, <span class="fk">komponen_id</span></li>
+    <li>tahap, teknik, instrumen, kriteria</li>
+    <li>bobot</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>NilaiKomponen</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">krs_detail_id</span> (FK)</li>
+    <li><span class="fk">komponen_id</span> (FK)</li>
+    <li>nilai (0-100)</li>
+    <li><span class="fk">updated_by</span> (FK → dosen)</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>NilaiCPMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">krs_detail_id</span> (FK)</li>
+    <li><span class="fk">cpmk_id</span> (FK)</li>
+    <li>nilai</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>NilaiMK</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">krs_detail_id</span> (FK, unique)</li>
+    <li>nilai_angka</li>
+    <li>nilai_huruf</li>
+    <li>bobot_nilai</li>
+    <li>lulus</li>
+  </ul>
+</div>
+
+<div class="entity">
+  <h4>KetercapaianCPL</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li><span class="fk">mahasiswa_id</span> (FK)</li>
+    <li><span class="fk">cpl_id</span> (FK)</li>
+    <li><span class="fk">tahun_akademik_id</span> (FK)</li>
+    <li>skor_maks, total_skor</li>
+    <li>nilai_rata_rata, status</li>
+  </ul>
+</div>
+
+<h2>5. Auth</h2>
+
+<div class="entity">
+  <h4>Users</h4>
+  <ul>
+    <li><span class="pk">id</span> (PK)</li>
+    <li>username (unique)</li>
+    <li>password_hash</li>
+    <li>role (admin/dosen/mahasiswa)</li>
+    <li>ref_id (int, ke dosen/mahasiswa)</li>
+    <li>aktif</li>
+  </ul>
+</div>
+
+<h2>6. Ringkasan Relasi</h2>
+<table>
+  <tr><th>Relasi</th><th>Tipe</th><th>Via</th></tr>
+  <tr><td>CPL → CPMK</td><td>1 : N</td><td>cpmk.cpl_id</td></tr>
+  <tr><td>CPMK → SubCPMK</td><td>1 : N</td><td>sub_cpmk.cpmk_id</td></tr>
+  <tr><td>CPMK ↔ MK</td><td>N : N</td><td>cpmk_mk</td></tr>
+  <tr><td>MK → Kelas</td><td>1 : N</td><td>kelas.mk_id</td></tr>
+  <tr><td>TahunAkademik → Kelas</td><td>1 : N</td><td>kelas.tahun_akademik_id</td></tr>
+  <tr><td>Dosen → Kelas</td><td>1 : N</td><td>kelas.dosen_id</td></tr>
+  <tr><td>Mahasiswa → KRS</td><td>1 : N</td><td>krs.mahasiswa_id</td></tr>
+  <tr><td>KRS → KRSDetail</td><td>1 : N</td><td>krs_detail.krs_id</td></tr>
+  <tr><td>Kelas → KRSDetail</td><td>1 : N</td><td>krs_detail.kelas_id</td></tr>
+  <tr><td>KRSDetail → NilaiKomponen</td><td>1 : N</td><td>nilai_komponen.krs_detail_id</td></tr>
+  <tr><td>KRSDetail → NilaiCPMK</td><td>1 : N</td><td>nilai_cpmk.krs_detail_id</td></tr>
+  <tr><td>KRSDetail → NilaiMK</td><td>1 : 1</td><td>nilai_mk.krs_detail_id (unique)</td></tr>
+  <tr><td>Kelas → BobotKomponenMK</td><td>1 : N</td><td>bobot_komponen_mk.kelas_id</td></tr>
+  <tr><td>Kelas → BobotCPMKMK</td><td>1 : N</td><td>bobot_cpmk_mk.kelas_id</td></tr>
+  <tr><td>Mahasiswa → KetercapaianCPL</td><td>1 : N</td><td>ketercapaian_cpl.mahasiswa_id</td></tr>
+  <tr><td>CPL → KetercapaianCPL</td><td>1 : N</td><td>ketercapaian_cpl.cpl_id</td></tr>
+</table>
+
+</body>
+</html>

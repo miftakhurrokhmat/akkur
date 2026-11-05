@@ -1,0 +1,1 @@
+from . import kurikulum, akademik, krs, penilaian

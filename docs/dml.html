@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>DML — SIMKUR</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; line-height: 1.6; background: #fafafa; }
+  h1 { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }
+  h2 { color: #4338ca; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+  pre { background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  .keyword { color: #f472b6; font-weight: bold; }
+  .string { color: #86efac; }
+  .comment { color: #6b7280; font-style: italic; }
+  table { border-collapse: collapse; width: 100%; margin: 15px 0; background: white; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+  th { background: #4f46e5; color: white; }
+</style>
+</head>
+<body>
+
+<h1>📝 Data Manipulation Language (DML)</h1>
+<h2 style="border:none;margin-top:0">SIMKUR — Contoh Query</h2>
+
+<h2>1. Insert Komponen Penilaian (13 default)</h2>
+<pre><code><span class="keyword">INSERT INTO</span> komponen_penilaian (kode, nama, kategori, deskripsi) <span class="keyword">VALUES</span>
+(<span class="string">'PART'</span>,       <span class="string">'Partisipasi'</span>,                <span class="string">'observasi'</span>,   <span class="string">'Keaktifan dalam perkuliahan'</span>),
+(<span class="string">'TUGAS_IND'</span>,  <span class="string">'Tugas Teori (Individu)'</span>,    <span class="string">'observasi'</span>,   <span class="string">'Tugas teori individu'</span>),
+(<span class="string">'TUGAS_KLG'</span>,  <span class="string">'Tugas Teori (Kelompok)'</span>,    <span class="string">'observasi'</span>,   <span class="string">'Tugas teori kelompok'</span>),
+(<span class="string">'KUIS'</span>,       <span class="string">'Kuis'</span>,                       <span class="string">'tes_tulis'</span>,   <span class="string">'Kuis singkat'</span>),
+(<span class="string">'UNJUK_KRJ'</span>,  <span class="string">'Unjuk Kerja (Presentasi)'</span>,  <span class="string">'unjuk_kerja'</span>, <span class="string">'Presentasi'</span>),
+(<span class="string">'UTS'</span>,        <span class="string">'Tes Tulis (UTS)'</span>,            <span class="string">'tes_tulis'</span>,   <span class="string">'Ujian Tengah Semester'</span>),
+(<span class="string">'UAS'</span>,        <span class="string">'Tes Tulis (UAS)'</span>,            <span class="string">'tes_tulis'</span>,   <span class="string">'Ujian Akhir Semester'</span>),
+(<span class="string">'PRKT_IND'</span>,   <span class="string">'Tugas Praktikum (Individu)'</span>, <span class="string">'praktik'</span>,     <span class="string">'Praktikum individu'</span>),
+(<span class="string">'PRKT_KLG'</span>,   <span class="string">'Tugas Praktikum (Kelompok)'</span>, <span class="string">'praktik'</span>,     <span class="string">'Praktikum kelompok'</span>),
+(<span class="string">'RESPONSI'</span>,   <span class="string">'Responsi'</span>,                    <span class="string">'praktik'</span>,     <span class="string">'Sesi responsi'</span>),
+(<span class="string">'PROJECT_IND'</span>,<span class="string">'Project Individu'</span>,             <span class="string">'praktik'</span>,     <span class="string">'Proyek akhir'</span>),
+(<span class="string">'TES_LISAN'</span>,  <span class="string">'Tes Lisan (Tugas Kelompok)'</span>,  <span class="string">'tes_lisan'</span>,   <span class="string">'Presentasi lisan'</span>),
+(<span class="string">'OBSERVASI'</span>,  <span class="string">'Observasi (Praktek)'</span>,         <span class="string">'observasi'</span>,   <span class="string">'Observasi praktik'</span>)
+<span class="keyword">ON CONFLICT</span> (kode) <span class="keyword">DO NOTHING</span>;</code></pre>
+
+<h2>2. Insert Data Demo</h2>
+
+<h3>2.1 Tahun Akademik</h3>
+<pre><code><span class="keyword">INSERT INTO</span> tahun_akademik (kode, tahun_mulai, semester, aktif) <span class="keyword">VALUES</span>
+(<span class="string">'2025/2026-Ganjil'</span>, 2025, <span class="string">'Ganjil'</span>, <span class="keyword">TRUE</span>),
+(<span class="string">'2025/2026-Genap'</span>,  2025, <span class="string">'Genap'</span>,  <span class="keyword">FALSE</span>);</code></pre>
+
+<h3>2.2 Dosen</h3>
+<pre><code><span class="keyword">INSERT INTO</span> dosen (nidn, nama, email, jabatan) <span class="keyword">VALUES</span>
+(<span class="string">'0512345678'</span>, <span class="string">'Dewi Anggraini, M.Kom'</span>, <span class="string">'dewi@amikom.ac.id'</span>, <span class="string">'Lektor'</span>),
+(<span class="string">'0523456789'</span>, <span class="string">'Robi Prasetya, M.Kom'</span>, <span class="string">'robi@amikom.ac.id'</span>, <span class="string">'Asisten Ahli'</span>);</code></pre>
+
+<h3>2.3 Mahasiswa</h3>
+<pre><code><span class="keyword">INSERT INTO</span> mahasiswa (nim, nama, angkatan, prodi) <span class="keyword">VALUES</span>
+(<span class="string">'21.01.0001'</span>, <span class="string">'Budi Santoso'</span>, 2021, <span class="string">'Teknologi Informasi'</span>),
+(<span class="string">'21.01.0002'</span>, <span class="string">'Ani Wijaya'</span>,   2021, <span class="string">'Teknologi Informasi'</span>),
+(<span class="string">'21.01.0003'</span>, <span class="string">'Cici Lestari'</span>, 2021, <span class="string">'Teknologi Informasi'</span>);</code></pre>
+
+<h3>2.4 Kelas TI012-A</h3>
+<pre><code><span class="keyword">INSERT INTO</span> kelas (mk_id, tahun_akademik_id, dosen_id, kode_kelas, kapasitas, jadwal, ruang)
+<span class="keyword">SELECT</span> mk.id, ta.id, d.id, <span class="string">'TI012-A'</span>, 40, <span class="string">'Senin 08:00-10:30'</span>, <span class="string">'R301'</span>
+<span class="keyword">FROM</span> mk, tahun_akademik ta, dosen d
+<span class="keyword">WHERE</span> mk.kode = <span class="string">'TI012'</span>
+  <span class="keyword">AND</span> ta.kode = <span class="string">'2025/2026-Ganjil'</span>
+  <span class="keyword">AND</span> d.nidn = <span class="string">'0512345678'</span>;</code></pre>
+
+<h2>3. Konfigurasi Bobot</h2>
+
+<h3>3.1 Bobot Komponen MK (Σ=100)</h3>
+<pre><code><span class="keyword">INSERT INTO</span> bobot_komponen_mk (kelas_id, komponen_id, bobot)
+<span class="keyword">SELECT</span> k.id, kp.id, v.bobot
+<span class="keyword">FROM</span> kelas k
+<span class="keyword">CROSS JOIN</span> (<span class="keyword">VALUES</span>
+    (<span class="string">'PART'</span>, 10.00),
+    (<span class="string">'TUGAS_IND'</span>, 20.00),
+    (<span class="string">'UTS'</span>, 30.00),
+    (<span class="string">'UAS'</span>, 40.00)
+) <span class="keyword">AS</span> v(kode, bobot)
+<span class="keyword">JOIN</span> komponen_penilaian kp <span class="keyword">ON</span> kp.kode = v.kode
+<span class="keyword">WHERE</span> k.kode_kelas = <span class="string">'TI012-A'</span>;</code></pre>
+
+<h3>3.2 Bobot CPMK dalam MK (Σ=100)</h3>
+<pre><code><span class="keyword">INSERT INTO</span> bobot_cpmk_mk (kelas_id, cpmk_id, bobot)
+<span class="keyword">SELECT</span> k.id, c.id, v.bobot
+<span class="keyword">FROM</span> kelas k
+<span class="keyword">CROSS JOIN</span> (<span class="keyword">VALUES</span>
+    (<span class="string">'CPMK051'</span>, 40.00),
+    (<span class="string">'CPMK052'</span>, 30.00),
+    (<span class="string">'CPMK053'</span>, 30.00)
+) <span class="keyword">AS</span> v(kode, bobot)
+<span class="keyword">JOIN</span> cpmk c <span class="keyword">ON</span> c.kode = v.kode
+<span class="keyword">WHERE</span> k.kode_kelas = <span class="string">'TI012-A'</span>;</code></pre>
+
+<h2>4. Query Penting</h2>
+
+<h3>4.1 Lihat semua CPL</h3>
+<pre><code><span class="keyword">SELECT</span> id, kode, aspek, LEFT(deskripsi, 80) <span class="keyword">AS</span> deskripsi
+<span class="keyword">FROM</span> cpl <span class="keyword">ORDER BY</span> kode;</code></pre>
+
+<h3>4.2 Lihat matriks CPMK × MK</h3>
+<pre><code><span class="keyword">SELECT</span> c.kode <span class="keyword">AS</span> cpmk, c.deskripsi, 
+       STRING_AGG(m.kode, <span class="string">', '</span>) <span class="keyword">AS</span> mk_list
+<span class="keyword">FROM</span> cpmk c
+<span class="keyword">LEFT JOIN</span> cpmk_mk cm <span class="keyword">ON</span> cm.cpmk_id = c.id
+<span class="keyword">LEFT JOIN</span> mk m <span class="keyword">ON</span> m.id = cm.mk_id
+<span class="keyword">GROUP BY</span> c.id, c.kode, c.deskripsi
+<span class="keyword">ORDER BY</span> c.kode;</code></pre>
+
+<h3>4.3 Nilai akhir MK per mahasiswa</h3>
+<pre><code><span class="keyword">SELECT</span> 
+    mhs.nim, mhs.nama,
+    mk.kode <span class="keyword">AS</span> mk_kode, mk.nama <span class="keyword">AS</span> mk_nama,
+    nm.nilai_angka, nm.nilai_huruf,
+    nm.bobot_nilai, nm.lulus
+<span class="keyword">FROM</span> nilai_mk nm
+<span class="keyword">JOIN</span> krs_detail kd <span class="keyword">ON</span> kd.id = nm.krs_detail_id
+<span class="keyword">JOIN</span> krs k <span class="keyword">ON</span> k.id = kd.krs_id
+<span class="keyword">JOIN</span> mahasiswa mhs <span class="keyword">ON</span> mhs.id = k.mahasiswa_id
+<span class="keyword">JOIN</span> kelas kl <span class="keyword">ON</span> kl.id = kd.kelas_id
+<span class="keyword">JOIN</span> mk <span class="keyword">ON</span> mk.id = kl.mk_id
+<span class="keyword">WHERE</span> mhs.nim = <span class="string">'21.01.0001'</span>
+<span class="keyword">ORDER BY</span> mk.semester, mk.kode;</code></pre>
+
+<h3>4.4 Hitung IPK</h3>
+<pre><code><span class="keyword">SELECT</span> 
+    mhs.nim, mhs.nama,
+    <span class="keyword">SUM</span>(mk.sks) <span class="keyword">AS</span> total_sks,
+    <span class="keyword">SUM</span>(nm.bobot_nilai * mk.sks) <span class="keyword">AS</span> total_mutu,
+    <span class="keyword">ROUND</span>(
+        <span class="keyword">SUM</span>(nm.bobot_nilai * mk.sks) / <span class="keyword">NULLIF</span>(<span class="keyword">SUM</span>(mk.sks), 0),
+        2
+    ) <span class="keyword">AS</span> ipk
+<span class="keyword">FROM</span> nilai_mk nm
+<span class="keyword">JOIN</span> krs_detail kd <span class="keyword">ON</span> kd.id = nm.krs_detail_id
+<span class="keyword">JOIN</span> krs k <span class="keyword">ON</span> k.id = kd.krs_id
+<span class="keyword">JOIN</span> mahasiswa mhs <span class="keyword">ON</span> mhs.id = k.mahasiswa_id
+<span class="keyword">JOIN</span> kelas kl <span class="keyword">ON</span> kl.id = kd.kelas_id
+<span class="keyword">JOIN</span> mk <span class="keyword">ON</span> mk.id = kl.mk_id
+<span class="keyword">WHERE</span> mhs.nim = <span class="string">'21.01.0001'</span>
+  <span class="keyword">AND</span> k.status = <span class="string">'disetujui'</span>
+<span class="keyword">GROUP BY</span> mhs.id, mhs.nim, mhs.nama;</code></pre>
+
+<h3>4.5 Ketercapaian CPL per mahasiswa</h3>
+<pre><code><span class="keyword">SELECT</span> 
+    cpl.kode <span class="keyword">AS</span> cpl_kode,
+    kc.skor_maks,
+    kc.total_skor,
+    kc.nilai_rata_rata,
+    kc.status
+<span class="keyword">FROM</span> ketercapaian_cpl kc
+<span class="keyword">JOIN</span> cpl <span class="keyword">ON</span> cpl.id = kc.cpl_id
+<span class="keyword">JOIN</span> mahasiswa mhs <span class="keyword">ON</span> mhs.id = kc.mahasiswa_id
+<span class="keyword">WHERE</span> mhs.nim = <span class="string">'21.01.0001'</span>
+<span class="keyword">ORDER BY</span> cpl.kode;</code></pre>
+
+<h2>5. Update & Delete</h2>
+
+<h3>5.1 Update nilai komponen</h3>
+<pre><code><span class="keyword">UPDATE</span> nilai_komponen
+<span class="keyword">SET</span> nilai = 90
+<span class="keyword">WHERE</span> krs_detail_id = 1 <span class="keyword">AND</span> komponen_id = 6;</code></pre>
+
+<h3>5.2 Setujui KRS</h3>
+<pre><code><span class="keyword">UPDATE</span> krs
+<span class="keyword">SET</span> status = <span class="string">'disetujui'</span>,
+    approved_by = 1,
+    approved_at = NOW()
+<span class="keyword">WHERE</span> id = 1;</code></pre>
+
+<h3>5.3 Hapus kelas (jika belum ada peserta)</h3>
+<pre><code><span class="keyword">DELETE FROM</span> kelas
+<span class="keyword">WHERE</span> id = 1
+  <span class="keyword">AND NOT EXISTS</span> (
+      <span class="keyword">SELECT</span> 1 <span class="keyword">FROM</span> krs_detail <span class="keyword">WHERE</span> kelas_id = 1
+  );</code></pre>
+
+</body>
+</html>

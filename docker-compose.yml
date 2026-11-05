@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: simkur_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kurikulum
+      POSTGRES_PASSWORD: kurikulum123
+      POSTGRES_DB: sim_kurikulum
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kurikulum -d sim_kurikulum"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: ./backend
+    container_name: simkur_app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://kurikulum:kurikulum123@db:5432/sim_kurikulum
+      SECRET_KEY: ${SECRET_KEY:-ganti-di-production}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/static:/app/static
+
+  nginx:
+    image: nginx:alpine
+    container_name: simkur_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  pgdata:

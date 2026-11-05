@@ -1,0 +1,140 @@
+{
+  "info": {
+    "name": "SIMKUR API",
+    "description": "Postman collection untuk SIMKUR",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "username", "value": "admin" },
+                { "key": "password", "value": "admin123" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Master Kurikulum",
+      "item": [
+        {
+          "name": "List CPL",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/cpl" }
+        },
+        {
+          "name": "Create CPL",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kode\": \"CPL12\",\n  \"deskripsi\": \"CPL Test\",\n  \"aspek\": \"Sikap\"\n}"
+            },
+            "url": "{{baseUrl}}/api/cpl"
+          }
+        },
+        {
+          "name": "List CPMK",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/cpmk" }
+        },
+        {
+          "name": "List MK",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/mk" }
+        },
+        {
+          "name": "List Pemetaan",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/pemetaan" }
+        }
+      ]
+    },
+    {
+      "name": "Transaksi KRS",
+      "item": [
+        {
+          "name": "List KRS Mahasiswa",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/krs/mahasiswa/1" }
+        },
+        {
+          "name": "Buat KRS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mahasiswa_id\": 1,\n  \"tahun_akademik_id\": 1\n}"
+            },
+            "url": "{{baseUrl}}/api/krs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Penilaian",
+      "item": [
+        {
+          "name": "Input Nilai",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"krs_detail_id\": 1,\n  \"dosen_id\": 1,\n  \"items\": [\n    { \"komponen_id\": 1, \"nilai\": 85 },\n    { \"komponen_id\": 6, \"nilai\": 75 }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/nilai/input"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Laporan",
+      "item": [
+        {
+          "name": "Tabel 19 — Rumusan MK",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/laporan/rumusan-mk/1" }
+        },
+        {
+          "name": "Tabel 20 — Rumusan CPL",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/laporan/rumusan-cpl/1?tahun_id=1" }
+        },
+        {
+          "name": "Transkrip",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/laporan/transkrip/1" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>PRD — SIMKUR</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; background: #fafafa; }
+  h1 { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }
+  h2 { color: #4338ca; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+  h3 { color: #6366f1; margin-top: 25px; }
+  table { border-collapse: collapse; width: 100%; margin: 15px 0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+  th { background: #4f46e5; color: white; font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', monospace; color: #dc2626; }
+  pre { background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge-p0 { background: #dc2626; color: white; }
+  .badge-p1 { background: #f59e0b; color: white; }
+  .badge-p2 { background: #10b981; color: white; }
+  .meta { background: white; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0; }
+  .toc { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc a { color: #4f46e5; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>📋 Product Requirements Document (PRD)</h1>
+<h2 style="border:none;margin-top:0">SIMKUR — Sistem Informasi Manajemen Kurikulum</h2>
+
+<div class="meta">
+  <strong>Versi:</strong> 1.0.0<br>
+  <strong>Tanggal:</strong> 2026-11-05<br>
+  <strong>Pemilik:</strong> Program Studi Teknologi Informasi<br>
+  <strong>Tech Stack:</strong> FastAPI + PostgreSQL + HTML/Tailwind
+</div>
+
+<div class="toc">
+  <strong>Daftar Isi</strong>
+  <ol>
+    <li><a href="#latar">Latar Belakang</a></li>
+    <li><a href="#tujuan">Tujuan</a></li>
+    <li><a href="#lingkup">Ruang Lingkup</a></li>
+    <li><a href="#persona">Persona Pengguna</a></li>
+    <li><a href="#fitur">Daftar Fitur</a></li>
+    <li><a href="#alur">Alur Bisnis</a></li>
+    <li><a href="#nfr">Non-Functional Requirements</a></li>
+    <li><a href="#kpi">Kriteria Sukses</a></li>
+  </ol>
+</div>
+
+<h2 id="latar">1. Latar Belakang</h2>
+<p>Program studi wajib mengelola kurikulum berbasis <strong>CPL (Capaian Pembelajaran Lulusan)</strong> sesuai SN-DIKTI dan Seoul Accord. Saat ini pengelolaan CPL-CPMK-MK dan penilaian masih manual di Excel (20 file terpisah), menyebabkan:</p>
+<ul>
+  <li>Sulit melacak ketercapaian CPL mahasiswa</li>
+  <li>Tidak ada jejak audit perubahan kurikulum</li>
+  <li>Pelaporan akreditasi memakan waktu berminggu-minggu</li>
+  <li>Relasi CPMK↔MK tidak konsisten antar file</li>
+</ul>
+
+<h2 id="tujuan">2. Tujuan Produk</h2>
+<ol>
+  <li><strong>Sentra data kurikulum</strong> — semua entitas CPL/CPMK/Sub-CPMK/MK dalam satu database</li>
+  <li><strong>Keterlacakan penuh</strong> — CPL → CPMK → MK → Sub-CPMK → Nilai → Ketercapaian</li>
+  <li><strong>Otomasi perhitungan</strong> — nilai Sub-CPMK → CPMK → MK → CPL tanpa Excel</li>
+  <li><strong>Kepatuhan akreditasi</strong> — laporan otomatis sesuai Tabel 19 & 20</li>
+  <li><strong>Responsif</strong> — bisa diakses dari HP dosen</li>
+</ol>
+
+<h2 id="lingkup">3. Ruang Lingkup</h2>
+
+<h3>✅ In-Scope (v1.0)</h3>
+<table>
+  <tr><th>Modul</th><th>Fitur</th></tr>
+  <tr><td>Master Kurikulum</td><td>CRUD CPL, CPMK, Sub-CPMK, MK; pemetaan CPMK↔MK</td></tr>
+  <tr><td>Master Akademik</td><td>CRUD Mahasiswa, Dosen, Tahun Akademik, Kelas</td></tr>
+  <tr><td>Transaksi KRS</td><td>Buat KRS, tambah MK, ajukan, setujui</td></tr>
+  <tr><td>Penilaian</td><td>Konfigurasi bobot, input nilai, hitung otomatis</td></tr>
+  <tr><td>Laporan</td><td>Tabel 19 (MK), Tabel 20 (CPL), transkrip, distribusi</td></tr>
+  <tr><td>Autentikasi</td><td>Login (admin/dosen/mahasiswa)</td></tr>
+</table>
+
+<h3>❌ Out-of-Scope (v1.0)</h3>
+<ul>
+  <li>Pembayaran UKT / keuangan</li>
+  <li>Presensi QR / fingerprint</li>
+  <li>Integrasi PDDIKTI</li>
+  <li>Mobile native (Android/iOS)</li>
+  <li>Multi-prodi</li>
+</ul>
+
+<h2 id="persona">4. Persona Pengguna</h2>
+
+<h3>👨‍💼 Admin Prodi</h3>
+<ul>
+  <li><strong>Tujuan:</strong> kelola master kurikulum, akun, tahun akademik</li>
+  <li><strong>Pain point:</strong> revisi kurikulum manual di Excel sering bentrok</li>
+  <li><strong>Kebutuhan:</strong> form CRUD, audit log, ekspor PDF</li>
+</ul>
+
+<h3>👨‍🏫 Dosen</h3>
+<ul>
+  <li><strong>Tujuan:</strong> input nilai per komponen, lihat ketercapaian CPMK</li>
+  <li><strong>Pain point:</strong> hitung rata-rata manual di Excel, sering salah</li>
+  <li><strong>Kebutuhan:</strong> form input cepat, hasil kalkulasi otomatis</li>
+</ul>
+
+<h3>👨‍🎓 Mahasiswa</h3>
+<ul>
+  <li><strong>Tujuan:</strong> isi KRS, lihat nilai & ketercapaian CPL</li>
+  <li><strong>Pain point:</strong> tidak tahu CPL mana yang sudah tercapai</li>
+  <li><strong>Kebutuhan:</strong> dashboard CPL, transkrip digital</li>
+</ul>
+
+<h2 id="fitur">5. Daftar Fitur (User Story)</h2>
+
+<h3>Modul Master Kurikulum</h3>
+<table>
+  <tr><th>ID</th><th>User Story</th><th>Prioritas</th></tr>
+  <tr><td>M-01</td><td>Admin dapat menambah CPL dengan kode unik</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>M-02</td><td>Admin dapat mengubah deskripsi CPL</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>M-04</td><td>Admin dapat menambah CPMK terhubung ke CPL</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>M-05</td><td>Admin dapat menambah Sub-CPMK terhubung ke CPMK</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>M-06</td><td>Admin dapat menambah MK dengan SKS & semester</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>M-07</td><td>Admin dapat memetakan CPMK ke banyak MK</td><td><span class="badge badge-p0">P0</span></td></tr>
+</table>
+
+<h3>Modul Transaksi KRS</h3>
+<table>
+  <tr><th>ID</th><th>User Story</th><th>Prioritas</th></tr>
+  <tr><td>T-01</td><td>Mahasiswa dapat membuat KRS baru (draft)</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>T-03</td><td>Sistem menolak jika kelas penuh</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>T-05</td><td>Dosen PA dapat setujui/tolak KRS</td><td><span class="badge badge-p0">P0</span></td></tr>
+</table>
+
+<h3>Modul Penilaian</h3>
+<table>
+  <tr><th>ID</th><th>User Story</th><th>Prioritas</th></tr>
+  <tr><td>P-01</td><td>Dosen dapat mengisi bobot komponen MK (Σ=100)</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>P-02</td><td>Dosen dapat mengisi bobot CPMK dalam MK (Σ=100)</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>P-05</td><td>Sistem hitung otomatis nilai CPMK</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>P-06</td><td>Sistem hitung otomatis nilai MK</td><td><span class="badge badge-p0">P0</span></td></tr>
+  <tr><td>P-07</td><td>Sistem hitung otomatis nilai CPL</td><td><span class="badge badge-p0">P0</span></td></tr>
+</table>
+
+<h2 id="alur">6. Alur Bisnis Utama</h2>
+
+<h3>Alur 1 — Persiapan Semester</h3>
+<pre><code>Admin Prodi
+  ↓ Buat tahun akademik (2025/2026-Ganjil)
+  ↓ Buat kelas TI012-A (dosen: Bu Dewi)
+Dosen (Bu Dewi)
+  ↓ Set bobot komponen: Partisipasi 10, Tugas 20, UTS 30, UAS 40
+  ↓ Set bobot CPMK: CPMK051 40, CPMK052 30, CPMK053 30
+  ↓ ✅ Kelas siap menerima mahasiswa</code></pre>
+
+<h3>Alur 2 — Penilaian (Akhir Semester)</h3>
+<pre><code>Bu Dewi
+  ↓ Buka kelas TI012-A
+  ↓ Input nilai Budi: Partisipasi=85, Tugas=80, UTS=75, UAS=90
+  ↓ Klik "Simpan & Hitung"
+  ↓ Sistem otomatis:
+      - Nilai CPMK051 = 85×25% + 75×75% = 77.50
+      - Nilai CPMK052 = 80×50% + 90×50% = 85.00
+      - Nilai CPMK053 = 75×50% + 90×50% = 82.50
+      - Nilai MK = 77.5×40% + 85×30% + 82.5×30% = 81.25 → A-</code></pre>
+
+<h2 id="nfr">7. Non-Functional Requirements</h2>
+<table>
+  <tr><th>Aspek</th><th>Target</th></tr>
+  <tr><td>Performance</td><td>Response API &lt; 500ms untuk 1000 mahasiswa</td></tr>
+  <tr><td>Scalability</td><td>5000 mahasiswa aktif, 100 kelas/semester</td></tr>
+  <tr><td>Availability</td><td>99% uptime</td></tr>
+  <tr><td>Security</td><td>JWT auth, HTTPS, password bcrypt</td></tr>
+  <tr><td>Responsiveness</td><td>Mobile-friendly (min 360px width)</td></tr>
+  <tr><td>Backup</td><td>Harian, retensi 30 hari</td></tr>
+</table>
+
+<h2 id="kpi">8. Kriteria Sukses</h2>
+<table>
+  <tr><th>KPI</th><th>Target</th></tr>
+  <tr><td>Waktu pengisian KRS</td><td>&lt; 5 menit (sebelumnya 30 menit)</td></tr>
+  <tr><td>Waktu hitung nilai 1 kelas</td><td>&lt; 1 menit (sebelumnya 2 jam)</td></tr>
+  <tr><td>Akurasi perhitungan</td><td>100% (dari 85% manual)</td></tr>
+  <tr><td>Waktu pelaporan akreditasi</td><td>&lt; 1 hari (sebelumnya 2 minggu)</td></tr>
+</table>
+
+</body>
+</html>

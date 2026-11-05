@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SAD — SIMKUR</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; background: #fafafa; }
+  h1 { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }
+  h2 { color: #4338ca; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+  h3 { color: #6366f1; margin-top: 25px; }
+  pre { background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.4; }
+  table { border-collapse: collapse; width: 100%; margin: 15px 0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+  th { background: #4f46e5; color: white; }
+  tr:nth-child(even) { background: #f9fafb; }
+  .diagram { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin: 15px 0; overflow-x: auto; }
+  .toc { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .toc a { color: #4f46e5; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<h1>🏗️ System Analysis & Design (SAD)</h1>
+<h2 style="border:none;margin-top:0">SIMKUR — Sistem Informasi Manajemen Kurikulum</h2>
+
+<div class="toc">
+  <strong>Daftar Isi</strong>
+  <ol>
+    <li><a href="#arsitektur">Arsitektur Sistem</a></li>
+    <li><a href="#usecase">Use Case Diagram</a></li>
+    <li><a href="#dfd">Data Flow Diagram</a></li>
+    <li><a href="#sequence">Sequence Diagram</a></li>
+    <li><a href="#state">State Diagram</a></li>
+    <li><a href="#class">Class Diagram</a></li>
+    <li><a href="#stack">Technology Stack</a></li>
+  </ol>
+</div>
+
+<h2 id="arsitektur">1. Arsitektur Sistem</h2>
+
+<h3>1.1 Arsitektur Fisik</h3>
+<div class="diagram"><pre>┌─────────────────────────────────────────────────────────┐
+│                    CLIENT (Browser)                     │
+│  - index.html (SPA dengan Tailwind + JS)               │
+└─────────────────────┬───────────────────────────────────┘
+                      │ HTTPS / JSON
+┌─────────────────────▼───────────────────────────────────┐
+│              NGINX (Reverse Proxy)                       │
+│  - SSL termination, static files, rate limiting         │
+└─────────────────────┬───────────────────────────────────┘
+                      │ HTTP localhost:8000
+┌─────────────────────▼───────────────────────────────────┐
+│              FASTAPI (Uvicorn workers)                   │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  API Layer (routers/)                             │  │
+│  │  - 15 router, ~60 endpoint                       │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Service Layer (services/)                        │  │
+│  │  - penilaian.py, krs_service.py, laporan.py      │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Data Access Layer (crud/)                        │  │
+│  │  - SQLAlchemy ORM                                 │  │
+│  └──────────────────────────────────────────────────┘  │
+└─────────────────────┬───────────────────────────────────┘
+                      │ psycopg2
+┌─────────────────────▼───────────────────────────────────┐
+│                 POSTGRESQL 16                            │
+│  - 20 tabel utama                                       │
+└─────────────────────────────────────────────────────────┘</pre></div>
+
+<h3>1.2 Arsitektur Logis (Layered)</h3>
+<div class="diagram"><pre>┌────────────────────────────────────────────┐
+│  PRESENTATION LAYER                        │
+│  HTML, CSS (Tailwind), JavaScript          │
+└───────────────┬────────────────────────────┘
+                │ JSON via fetch()
+┌───────────────▼────────────────────────────┐
+│  APPLICATION LAYER                         │
+│  FastAPI Router → Service → CRUD           │
+└───────────────┬────────────────────────────┘
+                │ SQLAlchemy
+┌───────────────▼────────────────────────────┐
+│  DATA ACCESS LAYER                         │
+│  SQLAlchemy ORM Models                     │
+└───────────────┬────────────────────────────┘
+                │ psycopg2
+┌───────────────▼────────────────────────────┐
+│  DATABASE LAYER                            │
+│  PostgreSQL 16                             │
+└────────────────────────────────────────────┘</pre></div>
+
+<h2 id="usecase">2. Use Case Diagram</h2>
+
+<h3>2.1 Aktor</h3>
+<ul>
+  <li><strong>Admin Prodi</strong> — pengelola sistem</li>
+  <li><strong>Dosen</strong> — pengampu kelas & penilai</li>
+  <li><strong>Dosen PA</strong> — penasihat akademik (approve KRS)</li>
+  <li><strong>Mahasiswa</strong> — pengisi KRS & penerima nilai</li>
+  <li><strong>Auditor</strong> — read-only untuk akreditasi</li>
+</ul>
+
+<h3>2.2 Use Case Textual</h3>
+<div class="diagram"><pre>Admin Prodi
+  ├─ Kelola CPL, CPMK, Sub-CPMK, MK
+  ├─ Pemetaan CPMK↔MK
+  ├─ Kelola Mahasiswa, Dosen, Tahun Akademik, Kelas
+  ├─ Lihat Laporan CPL (Tabel 20)
+  └─ Export Excel/PDF
+
+Dosen (pengampu)
+  ├─ Konfigurasi bobot komponen MK
+  ├─ Konfigurasi bobot CPMK dalam MK
+  ├─ Konfigurasi teknik per CPMK
+  ├─ Input nilai komponen mahasiswa
+  ├─ Hitung nilai CPMK, MK (otomatis)
+  └─ Export Tabel 19 (Rumusan MK)
+
+Dosen PA
+  ├─ Lihat daftar KRS mahasiswa bimbingan
+  ├─ Setujui KRS
+  └─ Tolak KRS
+
+Mahasiswa
+  ├─ Login
+  ├─ Buat KRS, tambah kelas, ajukan
+  ├─ Lihat nilai MK
+  ├─ Lihat ketercapaian CPL
+  └─ Lihat transkrip
+
+Auditor
+  ├─ Lihat laporan CPL prodi
+  ├─ Lihat laporan distribusi CPMK
+  └─ Export laporan akreditasi</pre></div>
+
+<h2 id="dfd">3. Data Flow Diagram (DFD)</h2>
+
+<h3>3.1 DFD Level 0 — Context Diagram</h3>
+<div class="diagram"><pre>                  ┌─────────────────────┐
+   Admin Prodi ──►│                     │◄── Dosen
+                  │      SIMKUR         │
+   Mahasiswa ────►│                     │◄── Dosen PA
+                  │                     │
+   Auditor ──────►│                     │
+                  └─────────────────────┘
+                           │
+                           ▼
+                     [PostgreSQL]</pre></div>
+
+<h3>3.2 DFD Level 1</h3>
+<div class="diagram"><pre>┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  1.0 Kelola Master Kurikulum                             │
+│     (CPL, CPMK, Sub-CPMK, MK)                            │
+│                                                          │
+│  2.0 Kelola Master Akademik                              │
+│     (Mahasiswa, Dosen, TahunAkademik, Kelas)             │
+│                                                          │
+│  3.0 Pemetaan CPMK-MK                                    │
+│                                                          │
+│  4.0 Kelola KRS                                          │
+│     (buat, ajukan, setujui)                              │
+│                                                          │
+│  5.0 Konfigurasi Penilaian                               │
+│     (bobot komponen, bobot CPMK, teknik per CPMK)        │
+│                                                          │
+│  6.0 Input Nilai                                         │
+│     (nilai komponen, auto hitung CPMK & MK)              │
+│                                                          │
+│  7.0 Hitung Ketercapaian CPL                             │
+│                                                          │
+│  8.0 Laporan                                             │
+│     (Tabel 19, Tabel 20, transkrip, distribusi)          │
+│                                                          │
+└──────────────────────────────────────────────────────────┘</pre></div>
+
+<h2 id="sequence">4. Sequence Diagram</h2>
+
+<h3>4.1 Sequence — Dosen Input Nilai & Hitung</h3>
+<div class="diagram"><pre>Dosen       Frontend       API Nilai    Service     DB
+   │           │              │           │          │
+   │─Pilih mhs─►              │           │          │
+   │           │─GET nilai───►│           │          │
+   │           │◄─detail──────│           │          │
+   │           │              │           │          │
+   │─Isi 4 nilai─►            │           │          │
+   │           │─POST komp───►│           │          │
+   │           │              │─INSERT────►          │
+   │           │              │─hitungCPMK►          │
+   │           │              │           │─Σ(bobot)─►│
+   │           │              │           │◄─nilai───│
+   │           │              │◄─nilaiCPMK│          │
+   │           │              │─hitungMK─►│          │
+   │           │              │           │─Σ(bobot)─►│
+   │           │              │           │◄─nilai───│
+   │           │◄─nilai_mk────│◄─nilaiMK──│          │
+   │─Lihat hasil─►            │           │          │</pre></div>
+
+<h2 id="state">5. State Diagram — KRS</h2>
+<div class="diagram"><pre>   ┌──────┐    ajukan    ┌──────────┐
+   │draft ├─────────────►│diajukan  │
+   └──────┘              └────┬─────┘
+                              │
+                       setujui│     tolak
+                              ▼      │
+                         ┌────────┐  │
+                         │disetujui│ │
+                         └───┬────┘  │
+                             │       ▼
+                     nilai   │   ┌─────────┐
+                             └──►│ditolak  │
+                                 └─────────┘</pre></div>
+
+<h2 id="class">6. Class Diagram (Domain Model)</h2>
+<div class="diagram"><pre>┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│     CPL      │      │     CPMK     │      │   SubCPMK    │
+├──────────────┤      ├──────────────┤      ├──────────────┤
+│ id           │      │ id           │      │ id           │
+│ kode         │◄─────│ cpl_id       │◄─────│ cpmk_id      │
+│ deskripsi    │      │ kode         │      │ kode         │
+│ aspek        │      │ deskripsi    │      │ deskripsi    │
+└──────────────┘      └──────┬───────┘      └──────────────┘
+                             │
+                             │ many-to-many
+                             ▼
+                      ┌──────────────┐
+                      │      MK      │
+                      ├──────────────┤
+                      │ id, kode     │
+                      │ nama, sks    │
+                      │ semester     │
+                      └──────┬───────┘
+                             │
+                             ▼
+                      ┌──────────────┐
+                      │    Kelas     │─────► Dosen
+                      ├──────────────┤
+                      │ mk_id        │
+                      │ dosen_id     │
+                      │ tahun_id     │
+                      └──────┬───────┘
+                             │
+                             ▼
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│  Mahasiswa   │─────►│     KRS      │◄─────│ TahunAkademik│
+└──────────────┘      └──────┬───────┘      └──────────────┘
+                             │
+                             ▼
+                      ┌──────────────┐
+                      │  KRSDetail   │
+                      └──────┬───────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+      ┌─────────────┐ ┌────────────┐ ┌────────────┐
+      │NilaiKomponen│ │ NilaiCPMK  │ │  NilaiMK   │
+      └─────────────┘ └────────────┘ └────────────┘</pre></div>
+
+<h2 id="stack">7. Technology Stack & Justifikasi</h2>
+<table>
+  <tr><th>Layer</th><th>Pilihan</th><th>Alasan</th></tr>
+  <tr><td>Backend</td><td>FastAPI</td><td>Async, performa tinggi, auto-doc Swagger</td></tr>
+  <tr><td>ORM</td><td>SQLAlchemy 2.0</td><td>Standar Python, migrasi via Alembic</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 16</td><td>ACID, JSON support, gratis</td></tr>
+  <tr><td>Frontend</td><td>HTML + Tailwind CDN</td><td>Zero build, cukup untuk CRUD</td></tr>
+  <tr><td>Auth</td><td>JWT (python-jose)</td><td>Stateless, mudah di-scale</td></tr>
+  <tr><td>Deploy</td><td>Docker Compose</td><td>Portabel, mudah di VPS</td></tr>
+  <tr><td>Proxy</td><td>Nginx</td><td>SSL, static serve, reverse proxy</td></tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMKUR — Sistem Informasi Manajemen Kurikulum</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  .tab-active { background-color: #4f46e5 !important; color: #fff !important; }
+  .loading { opacity: 0.5; pointer-events: none; }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="bg-indigo-700 text-white px-4 py-3 shadow sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div>
+      <h1 class="text-lg font-bold">SIMKUR</h1>
+      <p class="text-xs opacity-75">Sistem Informasi Manajemen Kurikulum</p>
+    </div>
+    <div id="userArea" class="text-sm">
+      <button onclick="showLogin()" class="bg-white text-indigo-700 px-4 py-1.5 rounded font-medium">Login</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div id="loginModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+    <h2 class="text-xl font-bold mb-4">Login SIMKUR</h2>
+    <div class="space-y-3">
+      <input id="loginUsername" placeholder="Username" class="w-full border rounded p-2">
+      <input id="loginPassword" type="password" placeholder="Password" class="w-full border rounded p-2">
+      <button onclick="doLogin()" class="w-full bg-indigo-600 text-white py-2 rounded font-medium">Masuk</button>
+      <p class="text-xs text-gray-500 text-center">
+        Default: admin/admin123 · dewi/dosen123 · budi/mhs123
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<main class="max-w-7xl mx-auto p-4 space-y-4">
+
+  <!-- Tabs -->
+  <div class="flex flex-wrap gap-2">
+    <button data-tab="cpl" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">CPL</button>
+    <button data-tab="cpmk" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">CPMK</button>
+    <button data-tab="sub-cpmk" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">Sub-CPMK</button>
+    <button data-tab="mk" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">MK</button>
+    <button data-tab="kelas" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">Kelas</button>
+    <button data-tab="krs" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">KRS</button>
+    <button data-tab="nilai" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">Nilai</button>
+    <button data-tab="laporan" class="tab-btn px-3 py-1.5 rounded bg-gray-200 text-sm">Laporan</button>
+  </div>
+
+  <!-- Panel -->
+  <section id="panel" class="bg-white rounded shadow p-4 min-h-[400px]">
+    <p class="text-gray-500">Pilih tab di atas untuk mulai.</p>
+  </section>
+</main>
+
+<script>
+// ============ CONFIG ============
+const API = "";  // kosong = relative ke host
+let token = localStorage.getItem("simkur_token") || "";
+let role = localStorage.getItem("simkur_role") || "";
+let username = localStorage.getItem("simkur_user") || "";
+
+// ============ HTTP ============
+async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  if (token) headers["Authorization"] = "Bearer " + token;
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401) { doLogout(); throw new Error("Unauthorized"); }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Error");
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ============ AUTH ============
+function showLogin() {
+  document.getElementById("loginModal").classList.remove("hidden");
+}
+
+async function doLogin() {
+  const u = document.getElementById("loginUsername").value;
+  const p = document.getElementById("loginPassword").value;
+  const form = new URLSearchParams({ username: u, password: p });
+  const res = await fetch(API + "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form,
+  });
+  if (!res.ok) return alert("Login gagal");
+  const data = await res.json();
+  token = data.access_token;
+  role = data.role;
+  username = data.username;
+  localStorage.setItem("simkur_token", token);
+  localStorage.setItem("simkur_role", role);
+  localStorage.setItem("simkur_user", username);
+  document.getElementById("loginModal").classList.add("hidden");
+  renderUser();
+  loadTab(currentTab);
+}
+
+function doLogout() {
+  token = ""; role = ""; username = "";
+  localStorage.removeItem("simkur_token");
+  localStorage.removeItem("simkur_role");
+  localStorage.removeItem("simkur_user");
+  renderUser();
+}
+
+function renderUser() {
+  const el = document.getElementById("userArea");
+  if (token) {
+    el.innerHTML = `
+      <span class="mr-2">${username} (${role})</span>
+      <button onclick="doLogout()" class="bg-red-500 px-3 py-1 rounded text-xs">Logout</button>`;
+  } else {
+    el.innerHTML = `<button onclick="showLogin()" class="bg-white text-indigo-700 px-4 py-1.5 rounded font-medium">Login</button>`;
+  }
+}
+
+// ============ TABS ============
+let currentTab = "cpl";
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("tab-active"));
+    btn.classList.add("tab-active");
+    currentTab = btn.dataset.tab;
+    loadTab(currentTab);
+  });
+});
+
+// ============ LOAD ============
+async function loadTab(tab) {
+  document.getElementById("panel").classList.add("loading");
+  try {
+    switch (tab) {
+      case "cpl":       await renderTable("CPL", "/api/cpl", ["kode","deskripsi","aspek"], {create: role==="admin"}); break;
+      case "cpmk":      await renderTable("CPMK", "/api/cpmk", ["kode","deskripsi","cpl_id"], {create: role==="admin"}); break;
+      case "sub-cpmk":  await renderTable("Sub-CPMK", "/api/sub-cpmk", ["kode","deskripsi","cpmk_id"], {create: role==="admin"}); break;
+      case "mk":        await renderTable("MK", "/api/mk", ["kode","nama","sks","semester"], {create: role==="admin"}); break;
+      case "kelas":     await renderKelas(); break;
+      case "krs":       await renderKRS(); break;
+      case "nilai":     await renderNilai(); break;
+      case "laporan":   await renderLaporan(); break;
+    }
+  } catch (e) {
+    document.getElementById("panel").innerHTML = `<p class="text-red-500">Error: ${e.message}</p>`;
+  } finally {
+    document.getElementById("panel").classList.remove("loading");
+  }
+}
+
+// ============ TABLE ============
+async function renderTable(title, endpoint, cols, opt = {}) {
+  const data = await api(endpoint);
+  let html = `<div class="flex justify-between items-center mb-3">
+    <h2 class="text-xl font-bold">${title} <span class="text-sm text-gray-500">(${data.length})</span></h2>
+    ${opt.create ? `<button onclick="createRow('${title}','${endpoint}','${cols.join(",")}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">+ Tambah</button>` : ""}
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-left">
+        <tr>${cols.map(c => `<th class="p-2 border-b">${c}</th>`).join("")}<th class="p-2 border-b">Aksi</th></tr>
+      </thead>
+      <tbody>${data.map(row => `
+        <tr class="hover:bg-gray-50">
+          ${cols.map(c => `<td class="p-2 border-b">${row[c] ?? ""}</td>`).join("")}
+          <td class="p-2 border-b">
+            ${opt.create ? `<button onclick="deleteRow('${endpoint}/${row.id}')" class="text-red-500 text-xs">Hapus</button>` : "-"}
+          </td>
+        </tr>`).join("") || `<tr><td colspan="${cols.length+1}" class="text-center p-4 text-gray-400">Belum ada data</td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+  document.getElementById("panel").innerHTML = html;
+}
+
+async function createRow(title, endpoint, cols) {
+  const fields = cols.split(",");
+  const body = {};
+  for (const f of fields) {
+    const val = prompt(`${f}:`);
+    if (val === null) return;
+    body[f] = f === "sks" || f === "semester" || f.endsWith("_id") ? parseInt(val) : val;
+  }
+  try { await api(endpoint, { method: "POST", body: JSON.stringify(body) }); loadTab(currentTab); }
+  catch (e) { alert("Gagal: " + e.message); }
+}
+
+async function deleteRow(path) {
+  if (!confirm("Hapus data ini?")) return;
+  try { await api(path, { method: "DELETE" }); loadTab(currentTab); }
+  catch (e) { alert("Gagal: " + e.message); }
+}
+
+// ============ KELAS ============
+async function renderKelas() {
+  const data = await api("/api/kelas");
+  document.getElementById("panel").innerHTML = `
+    <h2 class="text-xl font-bold mb-3">Kelas (${data.length})</h2>
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50"><tr>
+        <th class="p-2 border-b">Kode</th><th class="p-2 border-b">MK</th>
+        <th class="p-2 border-b">SKS</th><th class="p-2 border-b">Dosen</th>
+        <th class="p-2 border-b">Jadwal</th><th class="p-2 border-b">Peserta</th>
+      </tr></thead>
+      <tbody>${data.map(k => `
+        <tr class="hover:bg-gray-50">
+          <td class="p-2 border-b font-medium">${k.kode_kelas}</td>
+          <td class="p-2 border-b">${k.mk_nama}</td>
+          <td class="p-2 border-b">${k.sks}</td>
+          <td class="p-2 border-b">${k.dosen_nama || "-"}</td>
+          <td class="p-2 border-b">${k.jadwal || "-"}</td>
+          <td class="p-2 border-b">${k.terisi}/${k.kapasitas}</td>
+        </tr>`).join("") || `<tr><td colspan="6" class="text-center p-4 text-gray-400">Belum ada kelas</td></tr>`}
+      </tbody>
+    </table>`;
+}
+
+// ============ KRS ============
+async function renderKRS() {
+  const mhs = await api("/api/mahasiswa?limit=100");
+  const tahun = await api("/api/tahun-akademik");
+  document.getElementById("panel").innerHTML = `
+    <h2 class="text-xl font-bold mb-3">KRS</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+      <select id="krsMhs" class="border rounded p-2">
+        <option value="">-- Pilih Mahasiswa --</option>
+        ${mhs.map(m => `<option value="${m.id}">${m.nim} - ${m.nama}</option>`).join("")}
+      </select>
+      <select id="krsTahun" class="border rounded p-2">
+        ${tahun.map(t => `<option value="${t.id}">${t.kode}${t.aktif ? " (aktif)" : ""}</option>`).join("")}
+      </select>
+    </div>
+    <button onclick="loadKRSDetail()" class="bg-indigo-600 text-white px-4 py-2 rounded">Lihat KRS</button>
+    <div id="krsResult" class="mt-4"></div>`;
+}
+
+async function loadKRSDetail() {
+  const mhsId = document.getElementById("krsMhs").value;
+  if (!mhsId) return alert("Pilih mahasiswa");
+  const list = await api(`/api/krs/mahasiswa/${mhsId}`);
+  document.getElementById("krsResult").innerHTML = `
+    <h3 class="font-bold mb-2">Daftar KRS</h3>
+    ${list.map(k => `
+      <div class="border rounded p-3 mb-2">
+        <div class="flex justify-between items-center">
+          <div><b>${k.tahun_kode}</b> — Status: <span class="font-medium">${k.status}</span></div>
+          <div>${k.total_sks} SKS</div>
+        </div>
+      </div>`).join("") || `<p class="text-gray-500">Belum ada KRS</p>`}`;
+}
+
+// ============ NILAI ============
+async function renderNilai() {
+  const kelas = await api("/api/kelas");
+  document.getElementById("panel").innerHTML = `
+    <h2 class="text-xl font-bold mb-3">Nilai</h2>
+    <select id="nilaiKelas" class="border rounded p-2 mb-3">
+      <option value="">-- Pilih Kelas --</option>
+      ${kelas.map(k => `<option value="${k.id}">${k.kode_kelas} - ${k.mk_nama}</option>`).join("")}
+    </select>
+    <button onclick="loadPesertaNilai()" class="bg-indigo-600 text-white px-4 py-2 rounded mb-3">Lihat Peserta</button>
+    <div id="nilaiResult"></div>`;
+}
+
+async function loadPesertaNilai() {
+  const kelasId = document.getElementById("nilaiKelas").value;
+  if (!kelasId) return alert("Pilih kelas");
+  const peserta = await api(`/api/kelas/${kelasId}/peserta`);
+  document.getElementById("nilaiResult").innerHTML = `
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50"><tr>
+        <th class="p-2 border-b">NIM</th><th class="p-2 border-b">Nama</th>
+        <th class="p-2 border-b">Angkatan</th><th class="p-2 border-b">Aksi</th>
+      </tr></thead>
+      <tbody>${peserta.map(p => `
+        <tr>
+          <td class="p-2 border-b">${p.nim}</td>
+          <td class="p-2 border-b">${p.nama}</td>
+          <td class="p-2 border-b">${p.angkatan}</td>
+          <td class="p-2 border-b">
+            <button onclick="inputNilai(${p.krs_detail_id})" class="text-indigo-600 text-xs">Input Nilai</button>
+          </td>
+        </tr>`).join("") || `<tr><td colspan="4" class="text-center p-4 text-gray-400">Belum ada peserta</td></tr>`}
+      </tbody>
+    </table>`;
+}
+
+async function inputNilai(kdId) {
+  const data = await api(`/api/nilai/${kdId}`);
+  let formHtml = data.nilai_komponen.map(n => `
+    <div class="flex items-center gap-2 mb-1">
+      <label class="w-48 text-sm">${n.komponen_nama}</label>
+      <input type="number" min="0" max="100" value="${n.nilai ?? ""}"
+             id="nk_${n.komponen_id}" class="border rounded p-1 w-24">
+    </div>`).join("");
+  const panel = document.getElementById("nilaiResult");
+  panel.innerHTML = `
+    <div class="border rounded p-4 bg-gray-50">
+      <h3 class="font-bold mb-2">${data.mahasiswa.nama} (${data.mahasiswa.nim})</h3>
+      <p class="text-sm text-gray-600 mb-3">${data.kelas.kode} — ${data.kelas.mk}</p>
+      ${formHtml}
+      <div class="mt-3 flex gap-2">
+        <button onclick="simpanNilai(${kdId})" class="bg-green-600 text-white px-4 py-1 rounded">Simpan & Hitung</button>
+        <button onclick="loadPesertaNilai()" class="bg-gray-300 px-4 py-1 rounded">Batal</button>
+      </div>
+    </div>`;
+}
+
+async function simpanNilai(kdId) {
+  const inputs = document.querySelectorAll("input[id^='nk_']");
+  const items = [];
+  inputs.forEach(inp => {
+    if (inp.value !== "") {
+      items.push({ komponen_id: parseInt(inp.id.replace("nk_", "")), nilai: parseFloat(inp.value) });
+    }
+  });
+  try {
+    const res = await api("/api/nilai/input", {
+      method: "POST",
+      body: JSON.stringify({ krs_detail_id: kdId, dosen_id: 1, items }),
+    });
+    alert(`Berhasil!\nNilai MK: ${res.nilai_mk.nilai_angka} (${res.nilai_mk.nilai_huruf})`);
+    loadPesertaNilai();
+  } catch (e) { alert("Gagal: " + e.message); }
+}
+
+// ============ LAPORAN ============
+async function renderLaporan() {
+  document.getElementById("panel").innerHTML = `
+    <h2 class="text-xl font-bold mb-3">Laporan</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="border rounded p-4">
+        <h3 class="font-bold mb-2">Tabel 19 — Rumusan MK</h3>
+        <select id="lapKelas" class="border rounded p-2 w-full mb-2">
+          <option value="">-- Pilih Kelas --</option>
+        </select>
+        <button onclick="loadRumusanMK()" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Tampilkan</button>
+      </div>
+      <div class="border rounded p-4">
+        <h3 class="font-bold mb-2">Tabel 20 — Rumusan CPL</h3>
+        <select id="lapMhs" class="border rounded p-2 w-full mb-2"></select>
+        <select id="lapTahun" class="border rounded p-2 w-full mb-2"></select>
+        <button onclick="loadRumusanCPL()" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Tampilkan</button>
+      </div>
+    </div>
+    <div id="lapResult" class="mt-4"></div>`;
+  const kelas = await api("/api/kelas");
+  const mhs = await api("/api/mahasiswa?limit=100");
+  const tahun = await api("/api/tahun-akademik");
+  document.getElementById("lapKelas").innerHTML =
+    `<option value="">-- Pilih Kelas --</option>` +
+    kelas.map(k => `<option value="${k.id}">${k.kode_kelas} - ${k.mk_nama}</option>`).join("");
+  document.getElementById("lapMhs").innerHTML = mhs.map(m => `<option value="${m.id}">${m.nim} - ${m.nama}</option>`).join("");
+  document.getElementById("lapTahun").innerHTML = tahun.map(t => `<option value="${t.id}">${t.kode}</option>`).join("");
+}
+
+async function loadRumusanMK() {
+  const id = document.getElementById("lapKelas").value;
+  if (!id) return;
+  const data = await api(`/api/laporan/rumusan-mk/${id}`);
+  const kolom = data.cpmk_kolom;
+  document.getElementById("lapResult").innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="font-bold">${data.kelas} — ${data.mk}</h3>
+      <a href="${API}/api/laporan/export/rumusan-mk/${id}" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Export Excel</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50"><tr>
+          <th class="p-2 border-b">NIM</th><th class="p-2 border-b">Nama</th>
+          ${kolom.map(c => `<th class="p-2 border-b">${c}</th>`).join("")}
+          <th class="p-2 border-b">Akhir</th><th class="p-2 border-b">Huruf</th>
+        </tr></thead>
+        <tbody>${data.mahasiswa.map(m => `
+          <tr>
+            <td class="p-2 border-b">${m.nim}</td>
+            <td class="p-2 border-b">${m.nama}</td>
+            ${kolom.map(k => `<td class="p-2 border-b">${m.cpmk_nilai[k] ?? "-"}</td>`).join("")}
+            <td class="p-2 border-b font-medium">${m.nilai_angka ?? "-"}</td>
+            <td class="p-2 border-b font-medium">${m.nilai_huruf ?? "-"}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function loadRumusanCPL() {
+  const mhs = document.getElementById("lapMhs").value;
+  const tahun = document.getElementById("lapTahun").value;
+  const data = await api(`/api/laporan/rumusan-cpl/${mhs}?tahun_id=${tahun}`);
+  document.getElementById("lapResult").innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="font-bold">${data.mahasiswa.nim} — ${data.mahasiswa.nama}</h3>
+      <a href="${API}/api/laporan/export/rumusan-cpl/${mhs}?tahun_id=${tahun}" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Export Excel</a>
+    </div>
+    <p class="text-sm mb-2">Tercapai: <b>${data.ringkasan.tercapai}</b> / ${data.ringkasan.total_cpl}</p>
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50"><tr>
+        <th class="p-2 border-b">CPL</th><th class="p-2 border-b">Skor Maks</th>
+        <th class="p-2 border-b">Total</th><th class="p-2 border-b">Nilai</th>
+        <th class="p-2 border-b">Status</th>
+      </tr></thead>
+      <tbody>${data.cpl.map(c => `
+        <tr>
+          <td class="p-2 border-b">${c.kode}</td>
+          <td class="p-2 border-b">${c.skor_maks}</td>
+          <td class="p-2 border-b">${c.total}</td>
+          <td class="p-2 border-b font-medium">${c.nilai}</td>
+          <td class="p-2 border-b">
+            <span class="px-2 py-0.5 rounded text-xs ${c.status === "tercapai" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}">${c.status}</span>
+          </td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+// ============ INIT ============
+renderUser();
+loadTab("cpl");
+</script>
+</body>
+</html>
